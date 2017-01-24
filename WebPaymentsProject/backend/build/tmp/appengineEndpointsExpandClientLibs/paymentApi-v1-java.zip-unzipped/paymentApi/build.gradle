@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 
-group = 'com.oneconnect.payemts.backend'
+group = 'com.oneconnect.payments'
 archivesBaseName = 'paymentApi'
 version = 'v1-1.22.0-SNAPSHOT'
 

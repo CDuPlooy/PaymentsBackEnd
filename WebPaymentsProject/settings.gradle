@@ -1,1 +1,1 @@
-include ':paygateApp', ':backend'
+include ':paygateApp', ':backend', ':masterpassdemo'

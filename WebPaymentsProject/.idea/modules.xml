@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/WebPaymentsProject.iml" filepath="$PROJECT_DIR$/WebPaymentsProject.iml" />
       <module fileurl="file://$PROJECT_DIR$/backend/backend.iml" filepath="$PROJECT_DIR$/backend/backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/masterpassdemo/masterpassdemo.iml" filepath="$PROJECT_DIR$/masterpassdemo/masterpassdemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/paygateApp/paygateApp.iml" filepath="$PROJECT_DIR$/paygateApp/paygateApp.iml" />
     </modules>
   </component>
