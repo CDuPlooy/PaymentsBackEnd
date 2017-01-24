@@ -38,7 +38,7 @@ public class MasterPassAPI {
 
     public MasterPassResponseDTO queryCode(String code) {
         String url = URL + "/code/" + code;
-        log.log(Level.WARNING,"MasterPass Get Code request starting ...\n" + url);
+        log.log(Level.WARNING,"MasterPass queryCode request starting ...\n" + url);
 
         URLFetchService urlFetchService = URLFetchServiceFactory.getURLFetchService();
         HTTPRequest request = null;
@@ -46,21 +46,25 @@ public class MasterPassAPI {
         try {
             request = new HTTPRequest(new URL(url), HTTPMethod.GET);
             request.setHeader(new HTTPHeader("Content-Type", CONTENT_TYPE));
+            String userP = API_USER_NAME+":"+API_PASSWORD;
+            String authorizationString = "Basic " + Base64.encodeBase64String(userP.getBytes());
+            request.addHeader(new HTTPHeader("Authorization", authorizationString));
             HTTPResponse response = urlFetchService.fetch(request);
             if (response.getResponseCode() != 200) {
                 log.log(Level.SEVERE, "ERROR: HTTP response code from MasterPass is: "
                         + response.getResponseCode()
                         + " " + response.getContent().toString());
                 resp.setStatusCode(response.getResponseCode());
-                resp.setMessage("Unable to get transcation code");
+                resp.setMessage("Unable to query transcation code");
                 return resp;
             }
 
             String content = new String(response.getContent());
-            log.log(Level.WARNING, ".........response from MasterPass, content:  " + content);
+
             CodeQueryResponseDTO crd = gson.fromJson(content,CodeQueryResponseDTO.class);
             resp.setCodeQueryResponse(crd);
             resp.setMessage("Transaction code successfully queried");
+            log.log(Level.WARNING, ".........response from MasterPass, CodeQueryResponseDTO:  " + gson.toJson(crd));
 
         } catch (Exception e) {
             log.log(Level.SEVERE,"MasterPass Query Code failed", e);
@@ -76,7 +80,7 @@ public class MasterPassAPI {
     //Authorization:  user  fred:mypassword
     public MasterPassResponseDTO getCode(MasterPassRequestDTO mpr) {
         String url = URL + "/code/create";
-        log.log(Level.WARNING,"MasterPass Get Code request starting ...\n" + url);
+        log.log(Level.WARNING,"MasterPass getCode request starting ...\n" + url);
         // test();
 
         String json = gson.toJson(mpr);
@@ -97,6 +101,7 @@ public class MasterPassAPI {
                         + " " + response.getContent().toString());
                 resp.setStatusCode(response.getResponseCode());
                 resp.setMessage("Unable to get MasterPass transaction code");
+
                 return resp;
             }
             String content = new String(response.getContent());
@@ -105,6 +110,8 @@ public class MasterPassAPI {
             resp.setCodeResponse(crd);
             resp.setMessage("MasterPass Transaction code successfully obtained");
             log.log(Level.WARNING, ".........response from MasterPass, CodeResponseDTO:  " + gson.toJson(crd));
+            //todo remove this <code></code>
+            queryCode(crd.getCode());
 
         } catch (Exception e) {
             log.log(Level.SEVERE,"MasterPass Get Code failed", e);

@@ -1,1 +1,1 @@
-include ':paygateApp', ':backend', ':masterpassdemo'
+include ':paygateApp', ':backend', ':masterpassdemo', ':liblite-V1.0.21mp'

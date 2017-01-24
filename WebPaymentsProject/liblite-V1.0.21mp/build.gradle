@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('liblite-V1.0.21mp.aar'))

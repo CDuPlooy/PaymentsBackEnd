@@ -8,11 +8,12 @@ package com.oneconnect.payments;
 
 import com.oneconnect.payments.masterpass.DataTest;
 import com.oneconnect.payments.masterpass.NotificationPayload;
-import com.google.appengine.repackaged.com.google.api.client.util.Base64;
 import com.google.appengine.repackaged.org.apache.commons.codec.binary.Hex;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.oneconnect.payments.util.TransactionResponseDTO;
+
+import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;
 import java.util.Enumeration;
@@ -50,6 +51,7 @@ public class MasterPassNotificationServlet extends HttpServlet {
 
     /**
      * Handle notification (encrypted) from MasterPass
+     *
      * @param req
      * @param resp
      * @throws IOException
@@ -60,32 +62,43 @@ public class MasterPassNotificationServlet extends HttpServlet {
 
         log.log(Level.INFO, "################### doPost MasterPassNotificationServlet starting ...");
         printRequestParameters(req);
-        String notificationEncrypted = req.getParameter("notificationEncrypted");
+        String notificationEncrypted = req.getParameter("String");
         resp.setContentType("application/json");
 
-        try {
-            DataTest dt = GSON.fromJson(notificationEncrypted,DataTest.class);
-            if (!dt.getResult().equalsIgnoreCase("TEST")) {
-                if (notificationEncrypted != null) {
-                    NotificationPayload np = decrypt(notificationEncrypted);
-                    if (np != null) {
-                        //todo send fcm messages + save to database .....................
-                        resp.getWriter().println("Request OK");
-                    } else {
-                        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        resp.getWriter().println("Bad Request");
-                    }
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.getWriter().println("Bad Request");
-                }
 
-            }  else {
-                resp.getWriter().println("TEST Request OK");
+        try {
+            DataTest dt = GSON.fromJson(notificationEncrypted, DataTest.class);
+            if (dt != null) {
+                if (dt.getResult().equalsIgnoreCase("TEST")) {
+                    log.log(Level.WARNING, "*** TEST received. Everythings' is A OK!");
+                    resp.getWriter().println("*** TEST received. Everythings' is A OK!");
+                } else {
+                    processNotification(resp, notificationEncrypted);
+                }
+            } else {
+                processNotification(resp, notificationEncrypted);
+
             }
-        } catch (Exception s) {}
+        } catch (Exception s) {
+        }
 
         log.log(Level.WARNING, "################### MasterPassNotificationServlet ending ...");
+    }
+
+    private void processNotification(HttpServletResponse resp, String notificationEncrypted) throws IOException {
+        if (notificationEncrypted != null) {
+            NotificationPayload np = decrypt(notificationEncrypted);
+            if (np != null) {
+                //todo send fcm messages + save to database .....................
+                resp.getWriter().println("Request OK");
+            } else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().println("Bad Request");
+            }
+        } else {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println("Bad Request");
+        }
     }
 
     private void printRequestParameters(HttpServletRequest req) {
@@ -98,6 +111,7 @@ public class MasterPassNotificationServlet extends HttpServlet {
     }
 
     private NotificationPayload decrypt(String notification) {
+        log.log(Level.WARNING, "decrypting notification payload ...");
         NotificationPayload m = null;
         try {
             byte[] data = Base64.decodeBase64(notification.getBytes());
@@ -106,6 +120,7 @@ public class MasterPassNotificationServlet extends HttpServlet {
             c.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawKey, "AES"), new IvParameterSpec(new byte[16]));
             String json = new String(c.doFinal(data));
             m = GSON.fromJson(json, NotificationPayload.class);
+            log.log(Level.WARNING, "MasterPass decrypted: NotificationPayload:\n" + GSON.toJson(m));
         } catch (Exception e) {
             log.log(Level.SEVERE, "Failed to decrypt data", e);
         }

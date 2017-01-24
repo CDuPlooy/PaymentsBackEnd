@@ -1,5 +1,6 @@
 package com.oneconnectgroup.masterpass.demo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +13,7 @@ import android.view.View;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.oltio.liblite.activity.LibLiteActivity;
 import com.oneconnect.payments.paymentApi.model.MasterPassRequestDTO;
 import com.oneconnect.payments.paymentApi.model.MasterPassResponseDTO;
 
@@ -25,11 +27,12 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     Snackbar snackbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("MasterPass Demo");
         getSupportActionBar().setSubtitle("Testing Payment Gateway");
@@ -45,18 +48,26 @@ public class MainActivity extends AppCompatActivity {
         setFields();
     }
 
+    private void requestPayment() {
+        Intent intent = new Intent(this, LibLiteActivity.class);
+        intent.putExtra(LibLiteActivity.IN_CODE, "1234567890");
+        intent.putExtra(LibLiteActivity.IN_API_KEY, "APIKEY");
+        intent.putExtra(LibLiteActivity.IN_SYSTEM, "LIVE");
+        this.startActivityForResult(intent, 10);
+    }
+
     private void setFields() {
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.w(TAG, "onClick: sending ...\n" + GSON.toJson(request) );
+                Log.w(TAG, "onClick: sending ...\n" + GSON.toJson(request));
                 MasterPassUtil.getTransactionCode(request, new MasterPassUtil.MasterPassListener() {
                     @Override
                     public void onResponse(MasterPassResponseDTO response) {
                         Log.i(TAG, "onResponse: \n" + GSON.toJson(response));
-                        snackbar = Snackbar.make(toolbar,response.getMessage()
-                                + " (" + response.getStatusCode() + ")",Snackbar.LENGTH_INDEFINITE);
+                        snackbar = Snackbar.make(toolbar, response.getMessage()
+                                + " (" + response.getStatusCode() + ")", Snackbar.LENGTH_INDEFINITE);
                         snackbar.show();
                     }
 
@@ -67,6 +78,24 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case 10:
+                if (resultCode == LibLiteActivity.LIBLITE_ERROR) {
+                    int error_code = data.getIntExtra(LibLiteActivity.OUT_ERROR_CODE, -1);
+                    int location = data.getIntExtra(LibLiteActivity.OUT_LOCATION, -1); //...
+                } else if (resultCode == LibLiteActivity.LIBLITE_PAYMENT_SUCCESS) {
+                    String txReference = data.getStringExtra(LibLiteActivity.OUT_TX_REFERENCE); //...
+                } else if (resultCode == LibLiteActivity.LIBLITE_PAYMENT_FAILED) {
+                    String txReference = data.getStringExtra(LibLiteActivity.OUT_TX_REFERENCE); //...
+                } else if (resultCode == LibLiteActivity.LIBLITE_USER_CANCELLED) {
+                    int location = data.getIntExtra(LibLiteActivity.OUT_LOCATION, -1); //...
+                } else if (resultCode == LibLiteActivity.LIBLITE_INVALID_CODE) { ///**/...
+                }
+                break;
+        }
     }
 
     @Override
