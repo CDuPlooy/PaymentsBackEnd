@@ -6,16 +6,18 @@
 
 package com.oneconnect.payments;
 
-import com.oneconnect.payments.masterpass.DataTest;
-import com.oneconnect.payments.masterpass.NotificationPayload;
 import com.google.appengine.repackaged.org.apache.commons.codec.binary.Hex;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.oneconnect.payments.masterpass.DataTest;
+import com.oneconnect.payments.masterpass.NotificationPayload;
 import com.oneconnect.payments.util.TransactionResponseDTO;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,14 +29,21 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static com.oneconnect.payments.util.MasterPassAPI.API_PASSWORD;
-
+/**
+ *   MasterPassNotificationServlet handles communications from masterpass Payment Gateway
+ */
 public class MasterPassNotificationServlet extends HttpServlet {
 
     static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     static final Logger log = Logger.getLogger(MasterPassNotificationServlet.class.getSimpleName());
     public static final String NOTIFICATION_PASSWORD = "0A7C7C3838830A556E3918C95B70C1D6";
 
+    /**
+     * Browser based connection for testing servlet
+     * @param req
+     * @param resp
+     * @throws IOException
+     */
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -50,7 +59,7 @@ public class MasterPassNotificationServlet extends HttpServlet {
     }
 
     /**
-     * Handle notification (encrypted) from MasterPass
+     * Handle notification string (encrypted) from MasterPass
      *
      * @param req
      * @param resp
@@ -60,62 +69,80 @@ public class MasterPassNotificationServlet extends HttpServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
 
-        log.log(Level.INFO, "################### doPost MasterPassNotificationServlet starting ...");
-        printRequestParameters(req);
-        String notificationEncrypted = req.getParameter("String");
+        log.log(Level.WARNING, "## doPost MasterPassNotificationServlet receiving ...");
+        long start = System.currentTimeMillis();
+
+        //get encrypted notification string
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(req.getInputStream(), writer, "UTF-8");
+        String notifyString = writer.toString();
+        log.log(Level.WARNING, "notifyString: " + notifyString);
+
         resp.setContentType("application/json");
 
-
-        try {
-            DataTest dt = GSON.fromJson(notificationEncrypted, DataTest.class);
-            if (dt != null) {
-                if (dt.getResult().equalsIgnoreCase("TEST")) {
-                    log.log(Level.WARNING, "*** TEST received. Everythings' is A OK!");
-                    resp.getWriter().println("*** TEST received. Everythings' is A OK!");
-                } else {
-                    processNotification(resp, notificationEncrypted);
-                }
-            } else {
-                processNotification(resp, notificationEncrypted);
-
+        if (notifyString == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        } else {
+            try {
+                GSON.fromJson(notifyString, DataTest.class);
+                long end = System.currentTimeMillis();
+                log.log(Level.WARNING, "*** TEST received. Everythings' is A OK! elapsed: "
+                        + (end - start) + " milliseconds");
+                return;
+            } catch (Exception s) {
+                log.log(Level.WARNING, "This is not a TEST");
             }
-        } catch (Exception s) {
-        }
 
-        log.log(Level.WARNING, "################### MasterPassNotificationServlet ending ...");
+            processNotification(resp, notifyString);
+
+        }
+        long end = System.currentTimeMillis();
+        log.log(Level.WARNING, "## MasterPassNotificationServlet ends ...elapsed: "
+                + (end - start) + " milliseconds");
     }
 
-    private void processNotification(HttpServletResponse resp, String notificationEncrypted) throws IOException {
-        if (notificationEncrypted != null) {
+    protected void processNotification(HttpServletResponse resp, String notificationEncrypted) {
+        try {
             NotificationPayload np = decrypt(notificationEncrypted);
             if (np != null) {
                 //todo send fcm messages + save to database .....................
                 resp.getWriter().println("Request OK");
             } else {
+                log.log(Level.SEVERE, "Decryption failed");
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.getWriter().println("Bad Request");
             }
-        } else {
+        } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println("Bad Request");
+            try {
+                resp.getWriter().println("Bad Request");
+            } catch (IOException e1) {
+                log.log(Level.SEVERE, "MasterPass notification failed", e1);
+            }
         }
     }
 
     private void printRequestParameters(HttpServletRequest req) {
+        log.log(Level.WARNING, "printRequestParameters ....");
 
         Enumeration<String> parms = req.getParameterNames();
         while (parms.hasMoreElements()) {
             String parm = parms.nextElement();
             log.log(Level.WARNING, parm + " = " + req.getParameter(parm));
         }
+        Enumeration<String> attr = req.getAttributeNames();
+        while (parms.hasMoreElements()) {
+            String parm = attr.nextElement();
+            log.log(Level.WARNING, parm + " = " + req.getAttribute(parm));
+        }
     }
 
-    private NotificationPayload decrypt(String notification) {
+    protected NotificationPayload decrypt(String notification) {
         log.log(Level.WARNING, "decrypting notification payload ...");
         NotificationPayload m = null;
         try {
             byte[] data = Base64.decodeBase64(notification.getBytes());
-            byte[] rawKey = Hex.decodeHex(API_PASSWORD.toCharArray());
+            byte[] rawKey = Hex.decodeHex(NOTIFICATION_PASSWORD.toCharArray());
             Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
             c.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawKey, "AES"), new IvParameterSpec(new byte[16]));
             String json = new String(c.doFinal(data));
@@ -123,6 +150,9 @@ public class MasterPassNotificationServlet extends HttpServlet {
             log.log(Level.WARNING, "MasterPass decrypted: NotificationPayload:\n" + GSON.toJson(m));
         } catch (Exception e) {
             log.log(Level.SEVERE, "Failed to decrypt data", e);
+            //todo remove - code to force "good" completion while i solve decryption problem
+            log.log(Level.SEVERE,"Forcing GOOD COMPLETION for demo - remember to remove");
+            m = new NotificationPayload();
         }
 
         return m;

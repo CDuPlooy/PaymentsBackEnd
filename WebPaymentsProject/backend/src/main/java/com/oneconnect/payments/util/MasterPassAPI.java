@@ -12,6 +12,8 @@ import com.oneconnect.payments.masterpass.CodeQueryResponseDTO;
 import com.oneconnect.payments.masterpass.CodeResponseDTO;
 import com.oneconnect.payments.masterpass.MasterPassRequestDTO;
 import com.oneconnect.payments.masterpass.MasterPassResponseDTO;
+import com.oneconnect.payments.masterpass.NetworkPurchaseDTO;
+import com.oneconnect.payments.masterpass.NetworkPurchaseResponseDTO;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -32,10 +34,63 @@ public class MasterPassAPI {
     public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public static final String CONTENT_TYPE = "application/json; charset=UTF-8",
     API_USER_NAME = "merchant-379", API_PASSWORD = "ABFC4C87DE2319CC7FAB910DD654645D",
-            API_LIBLITE_TOKEN = "86807EDF15FAB8D56490871A5AD5E664";
+    AUTH_STRING = API_USER_NAME+":"+API_PASSWORD;
 
 
+    public NetworkPurchaseResponseDTO makeNetworkPurchase(NetworkPurchaseDTO networkPurchase) {
+        String url = URL + "/purchase/network/" + networkPurchase.getNetwork();
+        log.log(Level.WARNING,"MasterPass getCode request starting ...\n" + url);
 
+        String json = gson.toJson(networkPurchase);
+        URLFetchService urlFetchService = URLFetchServiceFactory.getURLFetchService();
+        HTTPRequest request;
+        NetworkPurchaseResponseDTO resp = new NetworkPurchaseResponseDTO();
+        try {
+            request = new HTTPRequest(new URL(url), HTTPMethod.POST);
+            request.setHeader(new HTTPHeader("Content-Type", CONTENT_TYPE));
+            String authorizationString = "Basic " + Base64.encodeBase64String(AUTH_STRING.getBytes());
+
+            request.addHeader(new HTTPHeader("Authorization", authorizationString));
+            request.setPayload(json.getBytes("UTF-8"));
+            HTTPResponse response = urlFetchService.fetch(request);
+            if (response.getResponseCode() != 200) {
+                switch (response.getResponseCode()) {
+                    case 432:          //invalid amt
+                        break;
+                    case 433:          //invalid network
+                        break;
+                    case 434:          //client suspended
+                        break;
+                    case 512:          //general system error
+                        break;
+                }
+                log.log(Level.SEVERE, "ERROR: HTTP response code from MasterPass is: " + response.getResponseCode()
+                        + " " + response.getContent().toString());
+                resp.setStatusCode(response.getResponseCode());
+                resp.setMessage("Unable to get MasterPass transaction code");
+
+                return resp;
+            }
+            String content = new String(response.getContent());
+
+            resp = gson.fromJson(content,NetworkPurchaseResponseDTO.class);
+            resp.setStatusCode(0);
+            resp.setMessage("MasterPass Network purchase  successfully completed");
+            log.log(Level.WARNING, ".........response from MasterPass, NetworkPurchaseResponseDTO:  " + gson.toJson(resp));
+
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE,"MasterPass Network Purchase failed", e);
+            resp.setStatusCode(9);
+            resp.setMessage("Failed to process MasterPass network purchase");
+        }
+        return resp;
+    }
+    /**
+     * Get transaction information from masterpass by code
+     * @param code
+     * @return
+     */
     public MasterPassResponseDTO queryCode(String code) {
         String url = URL + "/code/" + code;
         log.log(Level.WARNING,"MasterPass queryCode request starting ...\n" + url);
@@ -46,8 +101,7 @@ public class MasterPassAPI {
         try {
             request = new HTTPRequest(new URL(url), HTTPMethod.GET);
             request.setHeader(new HTTPHeader("Content-Type", CONTENT_TYPE));
-            String userP = API_USER_NAME+":"+API_PASSWORD;
-            String authorizationString = "Basic " + Base64.encodeBase64String(userP.getBytes());
+            String authorizationString = "Basic " + Base64.encodeBase64String(AUTH_STRING.getBytes());
             request.addHeader(new HTTPHeader("Authorization", authorizationString));
             HTTPResponse response = urlFetchService.fetch(request);
             if (response.getResponseCode() != 200) {
@@ -74,14 +128,14 @@ public class MasterPassAPI {
         return resp;
     }
 
-
-
-
-    //Authorization:  user  fred:mypassword
+    /**
+     * Request a transaction code from masterpass
+     * @param mpr
+     * @return
+     */
     public MasterPassResponseDTO getCode(MasterPassRequestDTO mpr) {
         String url = URL + "/code/create";
         log.log(Level.WARNING,"MasterPass getCode request starting ...\n" + url);
-        // test();
 
         String json = gson.toJson(mpr);
         URLFetchService urlFetchService = URLFetchServiceFactory.getURLFetchService();
@@ -90,8 +144,7 @@ public class MasterPassAPI {
         try {
             request = new HTTPRequest(new URL(url), HTTPMethod.POST);
             request.setHeader(new HTTPHeader("Content-Type", CONTENT_TYPE));
-            String userP = API_USER_NAME+":"+API_PASSWORD;
-            String authorizationString = "Basic " + Base64.encodeBase64String(userP.getBytes());
+            String authorizationString = "Basic " + Base64.encodeBase64String(AUTH_STRING.getBytes());
 
             request.addHeader(new HTTPHeader("Authorization", authorizationString));
             request.setPayload(json.getBytes("UTF-8"));
@@ -110,6 +163,7 @@ public class MasterPassAPI {
             resp.setCodeResponse(crd);
             resp.setMessage("MasterPass Transaction code successfully obtained");
             log.log(Level.WARNING, ".........response from MasterPass, CodeResponseDTO:  " + gson.toJson(crd));
+
             //todo remove this <code></code>
             queryCode(crd.getCode());
 

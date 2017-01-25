@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/liblite-V1.0.21mp" />
             <option value="$PROJECT_DIR$/masterpassdemo" />
             <option value="$PROJECT_DIR$/paygateApp" />
+            <option value="$PROJECT_DIR$/paymentslibrary" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
