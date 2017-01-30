@@ -12,6 +12,7 @@ import java.io.Serializable;
 public class MasterPassResponseDTO implements Serializable{
     private int statusCode;
     private String message;
+    private String testProperty;
     private CodeResponseDTO codeResponse;
     private CodeQueryResponseDTO codeQueryResponse;
 
@@ -45,5 +46,13 @@ public class MasterPassResponseDTO implements Serializable{
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getTestProperty() {
+        return testProperty;
+    }
+
+    public void setTestProperty(String testProperty) {
+        this.testProperty = testProperty;
     }
 }

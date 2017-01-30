@@ -25,7 +25,6 @@ import java.util.TimerTask;
 
 public class MasterPassUtil {
 
-
     private static PaymentApi paymentApi;
     public static final String TAG = MasterPassUtil.class.getSimpleName();
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

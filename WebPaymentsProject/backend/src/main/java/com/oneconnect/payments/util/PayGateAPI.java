@@ -1,16 +1,24 @@
 package com.oneconnect.payments.util;
 
-import com.oneconnect.payments.paygate.PayHOSTService;
-import com.oneconnect.payments.paygate.PingRequest;
-import com.oneconnect.payments.paygate.PingResponse;
-import com.oneconnect.payments.paygate.SinglePaymentRequest;
-import com.oneconnect.payments.paygate.SinglePaymentResponse;
+import com.google.appengine.api.urlfetch.HTTPHeader;
+import com.google.appengine.api.urlfetch.HTTPMethod;
+import com.google.appengine.api.urlfetch.HTTPRequest;
+import com.google.appengine.api.urlfetch.HTTPResponse;
+import com.google.appengine.api.urlfetch.URLFetchService;
+import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
+import com.google.appengine.repackaged.com.google.gson.Gson;
+import com.google.appengine.repackaged.com.google.gson.GsonBuilder;
+import com.oneconnect.payments.paygate.PayGateInitiateRequestDTO;
+import com.oneconnect.payments.paygate.PayGateInitiateTranResponseDTO;
+import com.oneconnect.payments.paygate.PayGateNotifyResponseDTO;
+import com.oneconnect.payments.paygate.PayGateQueryTransactionRequestDTO;
 
-import java.util.Iterator;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.xml.soap.DetailEntry;
 
 /**
  * Created by aubreymalabie on 1/19/17.
@@ -19,33 +27,73 @@ import javax.xml.soap.DetailEntry;
 public class PayGateAPI {
 
     private static final Logger log = Logger.getLogger(PayGateAPI.class.getName());
-//    public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    public static final PayHOSTService service = new PayHOSTService();
+    static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public SinglePaymentResponse singlePaymentRequest(SinglePaymentRequest request) {
-        log.log(Level.WARNING, "starting singlePaymentRequest ...." + request.getCardPaymentRequest().getCardNumber());
-        SinglePaymentResponse resp = new SinglePaymentResponse();
+    public static final String URL = "https://secure.paygate.co.za/payweb3/",
+            QUERY = "query.trans",
+            PROCESS_TRANS = "process.trans",
+            INITIATE_TRANS = "initiate.trans";
+
+
+    public PayGateInitiateTranResponseDTO initiateTransaction(PayGateInitiateRequestDTO payGateRequest) {
+        PayGateInitiateTranResponseDTO resp = new PayGateInitiateTranResponseDTO();
+        //todo URLFetch here and do POST
+        String url = URL.concat(INITIATE_TRANS);
+        String json = GSON.toJson(payGateRequest);
+        URLFetchService url_service = URLFetchServiceFactory.getURLFetchService();
         try {
-            resp = service.getPayHOSTSoap11().singlePayment(request);
-            log.log(Level.WARNING, "what the fuck happened - did not crash!");
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed singlePaymentRequest", e);
-            if (e instanceof javax.xml.ws.soap.SOAPFaultException) {
-                javax.xml.ws.soap.SOAPFaultException x = (javax.xml.ws.soap.SOAPFaultException) e;
-                javax.xml.soap.Detail detail = x.getFault().getDetail(); // <detail> node
-                Iterator detailEntries = detail.getDetailEntries(); //nodes under <detail>
+            URL myURL = new URL(url);
+            HTTPRequest request = new HTTPRequest(myURL, HTTPMethod.POST);
+            request.setHeader(new HTTPHeader("Content-Type", "application/json; charset=UTF-8"));
 
-                while (detailEntries.hasNext()) {
-                    DetailEntry de = (DetailEntry) detailEntries.next();
-                    log.log(Level.WARNING, de.toString());
-                }
-
+            request.setPayload(json.getBytes("utf8"));
+            HTTPResponse response = url_service.fetch(request);
+            if (response.getResponseCode() != 200) {
+                throw new IOException(new String(response.getContent()));
             }
+            String content = new String(response.getContent());
+           log.log(Level.WARNING,"initiateTransaction response: ".concat(content));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+
+        log.log(Level.WARNING, GSON.toJson(resp));
         return resp;
     }
-     public PingResponse ping(PingRequest request) {
-         PingResponse resp = service.getPayHOSTSoap11().ping(request);
-         return resp;
-     }
+    public PayGateNotifyResponseDTO getTransactionResponse(PayGateQueryTransactionRequestDTO payGateRequest) {
+        PayGateNotifyResponseDTO resp = new PayGateNotifyResponseDTO();
+        //todo URLFetch here and do POST
+        String url = URL.concat(QUERY);
+        String json = GSON.toJson(payGateRequest);
+        URLFetchService url_service = URLFetchServiceFactory.getURLFetchService();
+        try {
+            URL myURL = new URL(url);
+            HTTPRequest request = new HTTPRequest(myURL, HTTPMethod.POST);
+            request.setHeader(new HTTPHeader("Content-Type", "application/json; charset=UTF-8"));
+
+            request.setPayload(json.getBytes("utf8"));
+            HTTPResponse response = url_service.fetch(request);
+            if (response.getResponseCode() != 200) {
+                throw new IOException(new String(response.getContent()));
+            }
+            String content = new String(response.getContent());
+            log.log(Level.WARNING,"getTransactionResponse response: ".concat(content));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        log.log(Level.WARNING, GSON.toJson(resp));
+        return resp;
+    }
+
 }
