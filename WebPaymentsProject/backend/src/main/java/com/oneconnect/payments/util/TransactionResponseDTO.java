@@ -7,7 +7,24 @@ package com.oneconnect.payments.util;
 public class TransactionResponseDTO {
 
     private int statusCode;
-    private  String message;
+    private  String message, payRequestID;
+    int transactionStatus;
+
+    public String getPayRequestID() {
+        return payRequestID;
+    }
+
+    public void setPayRequestID(String payRequestID) {
+        this.payRequestID = payRequestID;
+    }
+
+    public int getTransactionStatus() {
+        return transactionStatus;
+    }
+
+    public void setTransactionStatus(int transactionStatus) {
+        this.transactionStatus = transactionStatus;
+    }
 
     public int getStatusCode() {
         return statusCode;

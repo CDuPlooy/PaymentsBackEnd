@@ -8,8 +8,8 @@ public class PayGateConstants {
     public static final String
             MERCHANT_PAYGATE_ID = "10011072130",
             ENCRYPTION_KEY = "secret",
-            MERCHANT_RETURN_URL = "https://paymentsproject-156208.appspot.com/_ah/api/paygate-return",
-            MERCHANT_NOTIFY_URL = "https://paymentsproject-156208.appspot.com/_ah/api/paygate-notify";
+            MERCHANT_RETURN_URL = "https://paymentsproject-156208.appspot.com/paygatereturn",
+            MERCHANT_NOTIFY_URL = "https://paymentsproject-156208.appspot.com/paygatenotify";
     public static final String
             PAYGATE_ID = "PAYGATE_ID",
             REFERENCE = "REFERENCE",

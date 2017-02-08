@@ -11,7 +11,12 @@ import android.view.View;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.oneconnect.payments.paymentApi.model.PayUResponseDTO;
+import com.oneconnectgroup.payuapp.payu.AdditionalInfo;
+import com.oneconnectgroup.payuapp.payu.Basket;
+import com.oneconnectgroup.payuapp.payu.Customer;
+import com.oneconnectgroup.payuapp.payu.PayUResponseDTO;
+import com.oneconnectgroup.payuapp.payu.SetTransaction;
+import com.oneconnectgroup.payuapp.payu.TransactionType;
 
 public class PayUActivity extends AppCompatActivity implements PayUUtil.PayUListener {
 
@@ -27,13 +32,51 @@ public class PayUActivity extends AppCompatActivity implements PayUUtil.PayUList
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ping();
+                setTestTransaction();
             }
         });
-        ping();
+        setTestTransaction();
     }
-      private void ping() {
-          PayUUtil.ping(this);
+      private void setTestTransaction() {
+          SetTransaction t = new SetTransaction();
+          t.setTransactionType(TransactionType.PAYMENT);
+
+          Customer c = new Customer();
+          c.setEmail("aubreym@oneconnectgroup.com");
+          c.setFirstName("Aubrey");
+          c.setLastName("Malabie");
+          c.setCountryCode("ZA");
+          c.setMobile("0710441887");
+          t.setCustomer(c);
+
+          AdditionalInfo info = new AdditionalInfo();
+          info.setCancelUrl(PayUUtil.CANCEL_URL);
+          info.setDevicePlatform("Android");
+          info.setNotificationUrl(PayUUtil.NOTIFY_URL);
+          info.setReturnUrl(PayUUtil.RETURN_URL);
+          info.setDemoMode("True");
+          info.setLocale("en");
+          info.setMerchantReference("OneConnect-"+System.currentTimeMillis());
+          info.setSupportedPaymentMethods(PayUUtil.PAYMENT_METHODS);
+          t.setAdditionalInformation(info);
+
+          Basket b = new Basket();
+          b.setDescription("Municipality Payment");
+          b.setAmountInCents("56499");
+          b.setCurrencyCode("ZAR");
+          t.setBasket(b);
+
+          PayUUtil.setTransaction(t, new PayUUtil.PayUListener() {
+              @Override
+              public void onResponse(PayUResponseDTO response) {
+                  Log.i(TAG, "onResponse: ".concat(GSON.toJson(response)));
+              }
+
+              @Override
+              public void onError(String message) {
+                  Log.e(TAG, "onError: ".concat(message) );
+              }
+          });
       }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -8,13 +8,11 @@ package com.oneconnect.payments;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.oneconnect.payments.masterpass.DataTest;
+import com.oneconnect.payments.paygate.PayGateNotifyResponseDTO;
+import com.oneconnect.payments.paygate.PayGateResponseDTO;
 import com.oneconnect.payments.util.TransactionResponseDTO;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *   MasterPassNotificationServlet handles communications from masterpass Payment Gateway
+ * MasterPassNotificationServlet handles communications from masterpass Payment Gateway
  */
 public class PayGateNotificationServlet extends HttpServlet {
 
@@ -33,6 +31,7 @@ public class PayGateNotificationServlet extends HttpServlet {
 
     /**
      * Browser based connection for testing servlet
+     *
      * @param req
      * @param resp
      * @throws IOException
@@ -40,15 +39,20 @@ public class PayGateNotificationServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
-        log.log(Level.WARNING, "################### doGet MasterPassNotificationServlet starting ...");
+        log.log(Level.WARNING, "################### doGet PayGateNotificationServlet starting ...");
         printRequestParameters(req);
-        resp.setContentType("application/json");
-        TransactionResponseDTO r = new TransactionResponseDTO();
-        r.setMessage("MasterPass testing: server responding with A OK!");
-        r.setStatusCode(0);
-
-        resp.getWriter().println(GSON.toJson(r));
-        log.log(Level.WARNING, "################### MasterPassNotificationServlet ending ...");
+        resp.setContentType("text/html");
+        PayGateResponseDTO payGateResponse = new PayGateResponseDTO();
+        try {
+            PayGateNotifyResponseDTO m = processNotification(req);
+            payGateResponse.setPayGateNotifyResponse(m);
+            payGateResponse.setMessage("PayGate notification response OK");
+        } catch (Exception e) {
+            payGateResponse.setStatusCode(9);
+            payGateResponse.setMessage("Unable to process PayGate notofication");
+        }
+        resp.getWriter().println("OK");
+        log.log(Level.WARNING, "################### PayGateNotificationServlet ended: sent OK ...");
     }
 
     /**
@@ -63,73 +67,68 @@ public class PayGateNotificationServlet extends HttpServlet {
             throws IOException {
 
         log.log(Level.WARNING, "## doPost PayGateNotificationServlet receiving ...");
-        long start = System.currentTimeMillis();
-
-        //get encrypted notification string
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(req.getInputStream(), writer, "UTF-8");
-        String notifyString = writer.toString();
-        log.log(Level.WARNING, "notifyString: " + notifyString);
-
+        printRequestParameters(req);
+        TransactionResponseDTO r = new TransactionResponseDTO();
+        r.setMessage("PayGateNotificationServlet: server notification responding with OK!");
+        r.setStatusCode(0);
         resp.setContentType("application/json");
-
-        if (notifyString == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else {
-            try {
-                GSON.fromJson(notifyString, DataTest.class);
-                long end = System.currentTimeMillis();
-                log.log(Level.WARNING, "*** TEST received. Everythings' is A OK! elapsed: "
-                        + (end - start) + " milliseconds");
-                return;
-            } catch (Exception s) {
-                log.log(Level.WARNING, "This is not a TEST");
-            }
-
-            processNotification(resp, notifyString);
-
+        PayGateResponseDTO payGateResponse = new PayGateResponseDTO();
+        try {
+            PayGateNotifyResponseDTO m = processNotification(req);
+            payGateResponse.setPayGateNotifyResponse(m);
+            payGateResponse.setMessage("PayGate notification response OK");
+        } catch (Exception e) {
+            payGateResponse.setStatusCode(9);
+            payGateResponse.setMessage("Unable to process PayGate notofication");
         }
-        long end = System.currentTimeMillis();
-        log.log(Level.WARNING, "## PayGateNotificationServlet ends ...elapsed: "
-                + (end - start) + " milliseconds");
+        resp.getWriter().println(GSON.toJson("OK"));
+        log.log(Level.WARNING, "################### PayGateNotificationServlet ended: sent OK ...");
     }
 
-    protected void processNotification(HttpServletResponse resp, String notificationEncrypted) {
-//        try {
-//            NotificationPayload np = decrypt(notificationEncrypted);
-//            if (np != null) {
-//                //todo send fcm messages + save to database .....................
-//                resp.getWriter().println("Request OK");
-//            } else {
-//                log.log(Level.SEVERE, "Decryption failed");
-//                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-//                resp.getWriter().println("Bad Request");
-//            }
-//        } catch (Exception e) {
-//            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-//            try {
-//                resp.getWriter().println("Bad Request");
-//            } catch (IOException e1) {
-//                log.log(Level.SEVERE, "PayGate notification failed", e1);
-//            }
-//        }
+    protected PayGateNotifyResponseDTO processNotification(HttpServletRequest req) throws Exception{
+
+        PayGateNotifyResponseDTO notifyResponse = new PayGateNotifyResponseDTO();
+        try {
+            notifyResponse.setTransactionID(req.getParameter("TRANSACTION_ID"));
+            notifyResponse.setTransactionStatus(Integer.parseInt(req.getParameter("TRANSACTION_STATUS")));
+            notifyResponse.setResultCode(Integer.parseInt(req.getParameter("RESULT_CODE")));
+            notifyResponse.setResultDesc(req.getParameter("RESULT_DESC"));
+            notifyResponse.setPayGateID(req.getParameter("PAYGATE_ID"));
+            notifyResponse.setPayMethodDetail(req.getParameter("PAY_METHOD_DETAIL"));
+            notifyResponse.setAmount(Integer.parseInt(req.getParameter("AMOUNT")));
+            notifyResponse.setReference(req.getParameter("REFERENCE"));
+            notifyResponse.setCurrency(req.getParameter("CURRENCY"));
+            notifyResponse.setRiskIndicator(req.getParameter("RISK_INDICATOR"));
+            notifyResponse.setAuthCode(req.getParameter("AUTH_CODE"));
+            notifyResponse.setChecksum(req.getParameter("CHECKSUM"));
+            notifyResponse.setPayMethod(req.getParameter("PAY_METHOD"));
+            notifyResponse.setUser1(req.getParameter("USER1"));
+            notifyResponse.setPayRequestID(req.getParameter("PAY_REQUEST_ID"));
+
+            log.log(Level.WARNING, "PayGateNotifyResponse:\n" + GSON.toJson(notifyResponse));
+        } catch (Exception e) {
+            log.log(Level.SEVERE,"Failed to parse PayGate notify", e);
+            throw e;
+        }
+
+        return notifyResponse;
     }
 
     private void printRequestParameters(HttpServletRequest req) {
-        log.log(Level.WARNING, "printRequestParameters ....");
+        StringBuilder sb = new StringBuilder();
 
         Enumeration<String> parms = req.getParameterNames();
         while (parms.hasMoreElements()) {
             String parm = parms.nextElement();
-            log.log(Level.WARNING, parm + " = " + req.getParameter(parm));
+            sb.append(parm).append(" = ").append(req.getParameter(parm)).append("\n");
         }
         Enumeration<String> attr = req.getAttributeNames();
         while (parms.hasMoreElements()) {
             String parm = attr.nextElement();
-            log.log(Level.WARNING, parm + " = " + req.getAttribute(parm));
+            sb.append(parm).append(" = ").append(req.getAttribute(parm)).append("\n");
         }
+
+        log.log(Level.WARNING, "Request parameters and attributes:\n" + sb.toString());
     }
-
-
 
 }

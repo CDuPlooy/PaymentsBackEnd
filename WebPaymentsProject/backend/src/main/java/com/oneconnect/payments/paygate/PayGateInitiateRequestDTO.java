@@ -25,8 +25,26 @@ public class PayGateInitiateRequestDTO implements Serializable {
     private int amount;
     static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    public static final String
+            PARM_PAYGATE_ID = "PAYGATE_ID",
+            PARM_REFERENCE = "REFERENCE",
+            PARM_AMOUNT = "AMOUNT",
+            PARM_CURRENCY = "CURRENCY",
+            PARM_RETURN_URL = "RETURN_URL",
+            PARM_TRANSACTION_DATE = "TRANSACTION_DATE",
+            PARM_LOCALE = "LOCALE",
+            PARM_COUNTRY = "COUNTRY",
+            PARM_EMAIL = "EMAIL",
+            PARM_NOTIFY_URL = "NOTIFY_URL",
+            PARM_USER1 = "USER1",
+            PARM_CHECKSUM = "CHECKSUM";
+
 
     public PayGateInitiateRequestDTO() {
+
+    }
+
+    public String calculateChecksum() {
         transactionDate = sdf.format(new Date());
         country = "ZAF";
         currency = "ZAR";
@@ -34,9 +52,8 @@ public class PayGateInitiateRequestDTO implements Serializable {
         locale = "en";
         returnURL = MERCHANT_RETURN_URL;
         notifyURL = MERCHANT_NOTIFY_URL;
-    }
 
-    public String calculateChecksum() {
+
         StringBuilder sb = new StringBuilder();
         sb.append(payGateID).append(reference).append(amount);
         sb.append(currency).append(returnURL).append(transactionDate);

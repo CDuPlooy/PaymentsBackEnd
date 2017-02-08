@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
-
+repositories {
+    maven { url 'https://oss.sonatype.org/content/repositories/ksoap2-android-releases/' }
+}
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -14,6 +16,10 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
+    lintOptions {
+        abortOnError false
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -23,12 +29,11 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+//    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'commons-codec:commons-codec:1.10'
-    // https://mvnrepository.com/artifact/com.google.api-client/google-api-client
     compile 'com.google.api-client:google-api-client:1.22.0'
     compile project(path: ':backend', configuration: 'android-endpoints')
     compile 'com.google.code.findbugs:jsr305:2.0.1'
@@ -41,4 +46,7 @@ dependencies {
     compile 'com.android.support:support-v13:25.1.0'
     compile 'com.android.support:recyclerview-v7:25.1.0'
     compile 'com.android.support:design:25.1.0'
+    compile 'com.squareup.okhttp3:okhttp:3.5.0'
+
+    compile 'com.google.code.ksoap2-android:ksoap2-android:3.6.2'
 }

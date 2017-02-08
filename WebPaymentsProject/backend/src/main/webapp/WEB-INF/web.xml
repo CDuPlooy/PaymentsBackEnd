@@ -31,6 +31,24 @@
         <url-pattern>/masterpass</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>PayGateNotificationServlet</servlet-name>
+        <servlet-class>com.oneconnect.payments.PayGateNotificationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PayGateNotificationServlet</servlet-name>
+        <url-pattern>/paygatenotify</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PayGateReturnServlet</servlet-name>
+        <servlet-class>com.oneconnect.payments.PayGateReturnServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PayGateReturnServlet</servlet-name>
+        <url-pattern>/paygatereturn</url-pattern>
+    </servlet-mapping>
+
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

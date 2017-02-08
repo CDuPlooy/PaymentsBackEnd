@@ -17,8 +17,8 @@ import com.oneconnect.payments.masterpass.MasterPassResponseDTO;
 import com.oneconnect.payments.paygate.PayGateInitiateRequestDTO;
 import com.oneconnect.payments.paygate.PayGateInitiateTranResponseDTO;
 import com.oneconnect.payments.paygate.PayGateNotifyResponseDTO;
-import com.oneconnect.payments.paygate.PayGateResponseDTO;
 import com.oneconnect.payments.paygate.PayGateQueryTransactionRequestDTO;
+import com.oneconnect.payments.paygate.PayGateResponseDTO;
 import com.oneconnect.payments.payu.PayUResponseDTO;
 import com.oneconnect.payments.util.MasterPassAPI;
 import com.oneconnect.payments.util.PayGateAPI;
@@ -46,13 +46,16 @@ public class PaymentEndpoint {
     public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private MasterPassAPI masterPassAPI = new MasterPassAPI();
 
+   ///////////////////////////// PAYGATE
 
     @ApiMethod(name = "initiatePayGate")
     public PayGateResponseDTO initiatePayGate(PayGateInitiateRequestDTO payGateRequest) {
+        log.log(Level.WARNING,"starting initiatePayGate ........:\n".concat(gson.toJson(payGateRequest)));
         PayGateResponseDTO mResponse = new PayGateResponseDTO();
         try {
             PayGateInitiateTranResponseDTO resp = payGateAPI.initiateTransaction(payGateRequest);
             mResponse.setPayGateInitiateTranResponse(resp);
+            mResponse.setMessage("PayGate - response is back... requestID: " + resp.getPayRequestID());
         } catch (Exception e) {
             mResponse.setStatusCode(9);
             mResponse.setMessage("Unable to initiate PayGate transaction");
@@ -73,6 +76,8 @@ public class PaymentEndpoint {
 
         return mResponse;
     }
+    ///////////////////////////// MASTERPASS
+
     @ApiMethod(name = "obtainMasterPassCode")
     public MasterPassResponseDTO obtainMasterPassCode(
             final MasterPassRequestDTO masterPassRequest) {

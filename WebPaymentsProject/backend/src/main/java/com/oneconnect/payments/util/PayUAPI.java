@@ -1,7 +1,8 @@
 package com.oneconnect.payments.util;
 
-import com.google.appengine.repackaged.com.google.gson.Gson;
-import com.google.appengine.repackaged.com.google.gson.GsonBuilder;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.oneconnect.payments.payu.AdditionalInfo;
 import com.oneconnect.payments.payu.Basket;
 import com.oneconnect.payments.payu.CreditCard;
@@ -14,15 +15,9 @@ import com.oneconnect.payments.payu.SetTransactionResponseMessage;
 import com.oneconnect.payments.payu.TransactionRecord;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.xml.ws.BindingProvider;
-import javax.xml.ws.handler.MessageContext;
 
 /**
  * Created by aubreymalabie on 1/28/17.
@@ -55,12 +50,12 @@ public class PayUAPI {
 //        prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, USER_NAME);
 //        prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, PASSWORD);
 //
-        Map<String, Object> req_ctx = ((BindingProvider)service).getRequestContext();
-
-        Map<String, List<String>> headers = new HashMap<>();
-        headers.put("Username", Collections.singletonList(USER_NAME));
-        headers.put("Password", Collections.singletonList(PASSWORD));
-        req_ctx.put(MessageContext.HTTP_REQUEST_HEADERS, headers);
+//        Map<String, Object> req_ctx = ((BindingProvider)service.getEnterpriseAPISoapPort()).getRequestContext();
+//
+//        Map<String, List<String>> headers = new HashMap<>();
+//        headers.put("Username", Collections.singletonList(USER_NAME));
+//        headers.put("Password", Collections.singletonList(PASSWORD));
+//        req_ctx.put(MessageContext.HTTP_REQUEST_HEADERS, headers);
 
     }
 
