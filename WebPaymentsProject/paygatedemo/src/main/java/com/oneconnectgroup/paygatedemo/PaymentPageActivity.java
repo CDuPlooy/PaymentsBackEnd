@@ -12,7 +12,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import org.apache.http.util.EncodingUtils;
 
@@ -32,7 +31,7 @@ public class PaymentPageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_page);
-         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Payment");
         getSupportActionBar().setSubtitle("OneConnect Gateway");
@@ -67,33 +66,21 @@ public class PaymentPageActivity extends AppCompatActivity {
         Log.d(TAG, "redirectToPaymentPage: PARAMETERS: ".concat(sb.toString()));
 
         try {
-            byte[] parms = EncodingUtils.getBytes(sb.toString(),"BASE64");
+            byte[] parms = EncodingUtils.getBytes(sb.toString(), "BASE64");
             Log.w(TAG, "redirectToPaymentPage: ".concat(sb.toString())
-                    + " \n" + PayGateConstants.PAYGATE_REDIRECT_URL  + " \nencodedParams: " + parms);
+                    + " \n" + PayGateConstants.PAYGATE_REDIRECT_URL + " \nencodedParams: " + parms);
 
             WebSettings webSettings = webView.getSettings();
             webSettings.setJavaScriptEnabled(true);
 
-            WebViewClient webViewClient = new WebViewClient();
-            webView.setWebViewClient(webViewClient);
-
             webView.postUrl(PayGateConstants.PAYGATE_REDIRECT_URL, parms);
         } catch (Exception e) {
-            Log.e(TAG, "redirectToPaymentPage: ", e );
+            Log.e(TAG, "redirectToPaymentPage: ", e);
             showSnackBar("Redirect to Payment Gateway failed", "Close", "#f44336");
         }
 
-
-        //startBrowser(sb.toString());
     }
 
-
-//    private void startBrowser(String parms) {
-//        String url = PayGateConstants.PAYGATE_REDIRECT_URL + "?" + parms;
-//        Log.w(TAG, "startBrowser: url: ".concat(url) );
-//        Intent intent= new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-//        startActivity(intent);
-//    }
     private Snackbar snackbar;
 
     private void showSnackBar(String title, String action, String color) {
@@ -109,66 +96,22 @@ public class PaymentPageActivity extends AppCompatActivity {
         }
         snackbar.show();
     }
+
     private void showSnackBar(String title) {
         snackbar = Snackbar.make(toolbar, title, Snackbar.LENGTH_LONG);
         snackbar.show();
     }
 
-//    class ATask extends AsyncTask<Void,Void,Integer> {
-//
-//        String html;
-//
-//        @Override
-//        protected Integer doInBackground(Void... voids) {
-//            OkHttpClient client = new OkHttpClient();
-//            RequestBody formBody = new FormBody.Builder()
-////                    .add("PAYGATE_ID", PayGateConstants.MERCHANT_PAYGATE_ID)
-//                    .add("PAY_REQUEST_ID", requestID)
-//                    .add("CHECKSUM",checksum)
-//                    .build();
-//            Request request = new Request.Builder()
-//                    .url(PayGateConstants.PAYGATE_REDIRECT_URL)
-//                    .post(formBody)
-//                    .build();
-//
-//            Log.e(TAG, "doInBackground: method: "+ request.method() + " body: " + request.body().toString()
-//            + " contentType: " + request.body().contentType() + " url: " + request.url().toString());
-//            try {
-//                Response okResponse = client.newCall(request).execute();
-//                html = new String(okResponse.body().string());
-//                Log.i(TAG,".........response from MyGate, content:  " + html);
-//
-//
-//            } catch (Exception ex) {
-//                Log.e(TAG, "doInBackground: FAILED", ex );
-//                return 9;
-//            }
-//            return 0;
-//        }
-//        @Override
-//        protected void onPostExecute(Integer result) {
-//            Log.i(TAG, "onPostExecute: ........... result: "+result);
-//            if (result == 0) {
-//                //todo load html
-//                webView.loadData(html,"text/html","UTF-8");
-//            }
-//        }
-//    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_payment_page, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_favourite) {
             return true;
         }

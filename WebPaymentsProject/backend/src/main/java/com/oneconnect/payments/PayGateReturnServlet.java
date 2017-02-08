@@ -38,9 +38,9 @@ public class PayGateReturnServlet extends HttpServlet {
             throws IOException {
         log.log(Level.WARNING, "################### doGet PayGateReturnServlet starting ...");
         printRequestParameters(req);
-        resp.setContentType("application/json");
-        TransactionResponseDTO r = processRequest(req);
-        resp.getWriter().println(GSON.toJson(r));
+        resp.setContentType("text/html");
+        String r = processRequest(req);
+        resp.getWriter().println(r);
 
         log.log(Level.WARNING, "################### PayGateReturnServlet ending ... sent data to app");
     }
@@ -58,14 +58,14 @@ public class PayGateReturnServlet extends HttpServlet {
 
         log.log(Level.WARNING, "## doPost PayGateReturnServlet receiving ...");
         printRequestParameters(req);
-        TransactionResponseDTO r = processRequest(req);
-        resp.setContentType("application/json");
-        resp.getWriter().println(GSON.toJson(r));
+        String r = processRequest(req);
+        resp.setContentType("text/html");
+        resp.getWriter().println(r);
 
         log.log(Level.WARNING, "################### PayGateReturnServlet ending ... sent data to app");
     }
 
-    private TransactionResponseDTO processRequest(HttpServletRequest req) {
+    private String processRequest(HttpServletRequest req) {
         TransactionResponseDTO tr = new TransactionResponseDTO();
         try {
             tr.setPayRequestID(req.getParameter("PAY_REQUEST_ID"));
@@ -92,12 +92,25 @@ public class PayGateReturnServlet extends HttpServlet {
 
         } catch (Exception e) {
             tr.setStatusCode(8);
-            tr.setMessage("Unable to process PayGate return data");
+            tr.setMessage("Unable to process the transaction");
 
         }
 
         log.log(Level.WARNING, "sending to app: " + GSON.toJson(tr));
-        return tr;
+        return getHTML(tr);
+    }
+
+    private String getHTML(TransactionResponseDTO tr) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<br><h1>").append("Payment Result</h1><br>");
+        sb.append("<h2>").append(tr.getMessage()).append("</h2><br>");
+        sb.append("<h3>Thank You!</h3>");
+        sb.append("<p>OneConnect Payment Gateway appreciates your business.</p>");
+        sb.append("<p>").append(tr.getPayRequestID()).append("</p>");
+
+
+
+        return sb.toString();
     }
     private void printRequestParameters(HttpServletRequest req) {
         StringBuilder sb = new StringBuilder();
