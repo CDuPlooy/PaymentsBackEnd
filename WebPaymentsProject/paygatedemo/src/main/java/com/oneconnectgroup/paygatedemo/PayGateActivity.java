@@ -3,6 +3,7 @@ package com.oneconnectgroup.paygatedemo;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
@@ -13,7 +14,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Chronometer;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -21,13 +26,21 @@ import com.google.gson.GsonBuilder;
 import com.oneconnect.payments.paymentApi.model.PayGateInitiateRequestDTO;
 import com.oneconnect.payments.paymentApi.model.PayGateResponseDTO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PayGateActivity extends AppCompatActivity {
     public static final String TAG = PayGateActivity.class.getSimpleName();
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private Toolbar toolbar;
     TextInputEditText editAmount;
     Button btnSend;
+    Spinner spinner;
     FloatingActionButton fab;
+    List<PayMethod> payMethods;
+    PayMethod payMethod;
+    boolean isBusy;
+    Chronometer chronometer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,51 +52,95 @@ public class PayGateActivity extends AppCompatActivity {
         getSupportActionBar().setSubtitle("OneConnect Payment Gateway");
 
         setFields();
+        setSpinner();
+    }
+
+    private void setSpinner() {
+        payMethods = PayMethod.getList();
+        List<String> list = new ArrayList<>();
+        for (PayMethod pm : payMethods) {
+            list.add(pm.getDescription());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, list);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                payMethod = payMethods.get(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
     private void setFields() {
+        chronometer = (Chronometer) findViewById(R.id.chronometer);
+        chronometer.setVisibility(View.GONE);
+        spinner = (Spinner) findViewById(R.id.spinner);
         editAmount = (TextInputEditText) findViewById(R.id.editAmount);
         btnSend = (Button) findViewById(R.id.btnSend);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startTransaction();
+                if (!isBusy)
+                    startTransaction();
+                else showBusy();
             }
         });
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startTransaction();
+                if (!isBusy)
+                    startTransaction();
+                else showBusy();
             }
         });
     }
 
+    private void showBusy() {
+        Toast.makeText(this, "Transaction is still in process. Wait a sec!", Toast.LENGTH_LONG).show();
+    }
+
     private void startTransaction() {
         if (TextUtils.isEmpty(editAmount.getText())) {
-            Toast.makeText(getApplicationContext(),"Please enter Amount",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Please enter Amount", Toast.LENGTH_SHORT).show();
             return;
         }
+
         final PayGateInitiateRequestDTO req = new PayGateInitiateRequestDTO();
         req.setReference("OneConnect-".concat("" + System.currentTimeMillis()));
 
         double m = Double.parseDouble(editAmount.getText().toString());
-        int i = (int)(m * 100);
+        int i = (int) (m * 100);
         req.setAmount(i);
         req.setEmail("aubreym@oneconnectgroup.com");
         req.setUser1("AubreyM");
+        req.setPayMethod(payMethod.getCode());
 
         Log.d(TAG, "startTransaction: ".concat(GSON.toJson(req)));
         showSnackBar("Starting PayGate Transaction ...", "OK", "yellow");
-
+        isBusy = true;
+        chronometer.setVisibility(View.VISIBLE);
+        chronometer.setBase(SystemClock.elapsedRealtime());
+        chronometer.setFormat("Time - %s");
+        chronometer.start();
+        btnSend.setVisibility(View.GONE);
         PayGateUtil.initiateTransaction(req, new PayGateUtil.PayGateListener() {
             @Override
             public void onResponse(PayGateResponseDTO response) {
                 Log.i(TAG, "onResponse: " + GSON.toJson(response));
+                isBusy = false;
+                chronometer.stop();
+                chronometer.setVisibility(View.GONE);
+                btnSend.setVisibility(View.VISIBLE);
                 if (response.getPayGateInitiateTranResponse().getStatusCode() == 0) {
                     String requestID = response.getPayGateInitiateTranResponse().getPayRequestID();
                     String ref = response.getPayGateInitiateTranResponse().getReference();
-
                     Log.w(TAG, "onResponse: requestID: " + requestID + " ref: " + ref);
 
                     //redirect to PayGate Payment Page

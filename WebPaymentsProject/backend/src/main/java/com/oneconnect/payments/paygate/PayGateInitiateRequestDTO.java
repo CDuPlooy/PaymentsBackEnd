@@ -35,9 +35,11 @@ public class PayGateInitiateRequestDTO implements Serializable {
             PARM_LOCALE = "LOCALE",
             PARM_COUNTRY = "COUNTRY",
             PARM_EMAIL = "EMAIL",
+            PARM_PAY_METHOD = "PAY_METHOD",
             PARM_NOTIFY_URL = "NOTIFY_URL",
             PARM_USER1 = "USER1",
             PARM_CHECKSUM = "CHECKSUM";
+
 
 
     public PayGateInitiateRequestDTO() {
@@ -57,7 +59,9 @@ public class PayGateInitiateRequestDTO implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append(payGateID).append(reference).append(amount);
         sb.append(currency).append(returnURL).append(transactionDate);
-        sb.append(locale).append(country).append(email).append(notifyURL);
+        sb.append(locale).append(country).append(email)
+                .append(payMethod)
+                .append(notifyURL);
         sb.append(user1).append(ENCRYPTION_KEY);
 
         try {
@@ -68,9 +72,17 @@ public class PayGateInitiateRequestDTO implements Serializable {
         }
 
     }
-     static final Logger log = Logger.getLogger(PayGateInitiateRequestDTO.class.getSimpleName());
+    static final Logger log = Logger.getLogger(PayGateInitiateRequestDTO.class.getSimpleName());
     public String getPayGateID() {
         return payGateID;
+    }
+
+    public String getPayMethod() {
+        return payMethod;
+    }
+
+    public void setPayMethod(String payMethod) {
+        this.payMethod = payMethod;
     }
 
     public void setPayGateID(String payGateID) {

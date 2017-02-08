@@ -124,34 +124,34 @@ public class PaymentPageActivity extends AppCompatActivity {
 
     /*
     Visa
-4000000000000002
+4000 0000 0000 0002
 Authenticated (AX) *
 MasterCard
-5200000000000015
+5200 0000 0000 0015
 Authenticated (AX)
 American Express
-378282246310005
+3782 8224 6310 005
 Not Authenticated (NX)
 M-Pesa
 N/A; enter MR PASS in First & Last Name field.
 Authenticated (AX) Insufficient Funds Transactions. RESULT_CODE = 900003; TRANSACTION_STATUS = 2.
 MasterCard
-5200000000000023
+5200 0000 0000 0023
 Not Authenticated (NX) *
 Visa
-4000000000000028
+4000 0000 0000 0028
 Not Authenticated (NX)
 American Express
-371449635398431
+3714 4963 5398 431
 Not Authenticated (NX) Declined Transactions. RESULT_CODE = 900007; TRANSACTION_STATUS = 2.
 Visa
-4000000000000036
+4000 0000 0000 0036
 Authenticated (AX) *
 MasterCard
-5200000000000049
+5200 0000 00000 049
 Authenticated (AX) *
 Diners Club
-30569309025904
+3056 9309 025 904
 Not Applicable (XX)
 M-Pesa
 N/A; enter MR FAIL in First & Last Name field
@@ -159,7 +159,7 @@ Not Applicable (XX) Invalid Card Number. RESULT_CODE = 900004; TRANSACTION_STATU
 For credit card payment method - all other card numbers
 Not Applicable (XX) Unprocessed Transactions. RESUT_CODE = 990022; TRANSACTION_STATUS = 0.
 MasterCard
-5200000000000064
+5200 0000 0000 0064
 Not Applicable (XX)
 Expiry Date must be in the future; Card Holder & CVV can be made up.
 * Using these card numbers will allow you to test the MasterCard SecureCode / Verified-by-Visa authentication process.

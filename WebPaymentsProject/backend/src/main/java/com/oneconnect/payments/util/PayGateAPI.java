@@ -54,6 +54,7 @@ public class PayGateAPI {
                 .add(PayGateInitiateRequestDTO.PARM_LOCALE, payGateRequest.getLocale())
                 .add(PayGateInitiateRequestDTO.PARM_COUNTRY, payGateRequest.getCountry())
                 .add(PayGateInitiateRequestDTO.PARM_EMAIL, payGateRequest.getEmail())
+                .add(PayGateInitiateRequestDTO.PARM_PAY_METHOD, payGateRequest.getPayMethod())
                 .add(PayGateInitiateRequestDTO.PARM_NOTIFY_URL, payGateRequest.getNotifyURL())
                 .add(PayGateInitiateRequestDTO.PARM_USER1, payGateRequest.getUser1())
                 .add(PayGateInitiateRequestDTO.PARM_CHECKSUM, payGateRequest.getChecksum())
